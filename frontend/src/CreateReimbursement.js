@@ -13,32 +13,69 @@ const CreateReimbursements = () => {
   }, []);
 
   const fetchReimbursements = async () => {
-    const res = await axios.get('/api/reimbursements');
-    setReimbursements(res.data);
+    try {
+      const response = await axios.get('/api/reimbursements');
+      setReimbursements(response.data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const newReimbursement = {
-      title,
-      description,
-      amount,
-      assignedTo,
-    };
+    try {
+      const response = await axios.post('/api/reimbursements', {
+        title,
+        description,
+        amount,
+        assignedTo,
+        status: 'pending',
+      });
 
-    await axios.post('/api/reimbursements', newReimbursement);
-    fetchReimbursements();
-  };
+      setReimbursements([...reimbursements, response.data]);
 
-  const handleDelete = async (id) => {
-    await axios.delete(`/api/reimbursements/${id}`);
-    fetchReimbursements();
+      setTitle('');
+      setDescription('');
+      setAmount('');
+      setAssignedTo('');
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleUpdateStatus = async (id, status) => {
-    await axios.patch(`/api/reimbursements/${id}`, { status });
-    fetchReimbursements();
+    try {
+      await axios.put(`/api/reimbursements/${id}`, { status });
+
+      const updatedReimbursements = reimbursements.map((reimbursement) =>
+        reimbursement._id === id ? { ...reimbursement, status } : reimbursement
+      );
+
+      setReimbursements(updatedReimbursements);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleEdit = (id) => {
+    const reimbursement = reimbursements.find((reimbursement) => reimbursement._id === id);
+    setTitle(reimbursement.title);
+    setDescription(reimbursement.description);
+    setAmount(reimbursement.amount);
+    setAssignedTo(reimbursement.assignedTo);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`/api/reimbursements/${id}`);
+
+      const updatedReimbursements = reimbursements.filter((reimbursement) => reimbursement._id !== id);
+
+      setReimbursements(updatedReimbursements);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
